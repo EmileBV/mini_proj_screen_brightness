@@ -19,17 +19,16 @@ def get_estimated_lux():
 
 
 def get_percent_lux():
-    global sensor_avg_arr
+    global sensor_avg
     lux_max = 200
+    sample_count = 10
     lux = get_estimated_lux()
     if lux == -1:
         return -1
     else:
-        sensor_avg_arr.append(lux)
-        if len(sensor_avg_arr) > 10:
-            sensor_avg_arr = sensor_avg_arr[1:]
-        lux_avg = np.average(sensor_avg_arr)
-        return (min(lux_max, max(0, lux_avg)) / lux_max) * 100
+        # moving average
+        sensor_avg = ((sensor_avg * (sample_count - 1)) + lux) / sample_count
+        return (min(lux_max, max(0, sensor_avg)) / lux_max) * 100
 
 
 def set_brightness(value):
@@ -87,7 +86,7 @@ if __name__ == '__main__':
     last_input_time = time.time()
     is_input_refreshed = True
     camera = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-    sensor_avg_arr = []
+    sensor_avg = 0
 
     # create main window
     gui = tk.Tk()
