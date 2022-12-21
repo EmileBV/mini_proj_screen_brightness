@@ -12,3 +12,6 @@ lib pythons utilisées:
 - tkinter
 - screen_brightness_control
 - fuzzy-c-means
+- opencv-python
+  - dernière version de cv2 (4.6) ne marche pas, utiliser cette commande pour installer une version fonctionnelle:
+  - ``pip install --force-reinstall --no-cache -U opencv-python==4.5.5.62   ``
