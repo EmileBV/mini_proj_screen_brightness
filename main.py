@@ -20,6 +20,7 @@ def get_estimated_lux():
 
 def get_percent_lux():
     global sensor_avg_arr
+    lux_max = 200
     lux = get_estimated_lux()
     if lux == -1:
         return -1
@@ -28,7 +29,7 @@ def get_percent_lux():
         if len(sensor_avg_arr) > 10:
             sensor_avg_arr = sensor_avg_arr[1:]
         lux_avg = np.average(sensor_avg_arr)
-        return (min(200, max(0, lux_avg)) / 200) * 100
+        return (min(lux_max, max(0, lux_avg)) / lux_max) * 100
 
 
 def set_brightness(value):
