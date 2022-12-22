@@ -3,8 +3,62 @@ import screen_brightness_control as sbc
 import time
 import cv2
 import numpy as np
+from skfuzzy import control as ctrl
 
+def control_init():
+    if control_init.first_run:
+        max = 120
+        br_input  = ctrl.Antecedent(np.arange(0,max,1), 'input')
+        br_forced = ctrl.Antecedent(np.arange(0,10,1), 'forced')
+        br_output = ctrl.Consequent(np.arange(0,max,1), 'output')
 
+        br_input.automf(7)  # [dismal, poor, mediocre, average, decent, good, excellent]
+        br_forced.automf(3) # [poor, average, good] or switch to c-means?
+        br_output.automf(7) # [dismal, poor, mediocre, average, decent, good, excellent]
+
+        br_forced.view()
+
+        # todo: rules
+        rule1   = ctrl.Rule(br_input['dismal'] & br_forced['poor'], br_output['dismal'])
+        rule2   = ctrl.Rule(br_input['poor'] & br_forced['poor'], br_output['dismal'])
+        rule3   = ctrl.Rule(br_input['mediocre'] & br_forced['poor'], br_output['poor'])
+        rule4   = ctrl.Rule(br_input['average'] & br_forced['poor'], br_output['mediocre'])
+        rule5   = ctrl.Rule(br_input['decent'] & br_forced['poor'], br_output['average'])
+        rule6   = ctrl.Rule(br_input['good'] & br_forced['poor'], br_output['decent'])
+        rule7   = ctrl.Rule(br_input['excellent'] & br_forced['poor'], br_output['good'])
+
+        rule11   = ctrl.Rule(br_input['dismal'] & br_forced['average'], br_output['dismal'])
+        rule12   = ctrl.Rule(br_input['poor'] & br_forced['average'], br_output['poor'])
+        rule13   = ctrl.Rule(br_input['mediocre'] & br_forced['average'], br_output['mediocre'])
+        rule14   = ctrl.Rule(br_input['average'] & br_forced['average'], br_output['average'])
+        rule15   = ctrl.Rule(br_input['decent'] & br_forced['average'], br_output['decent'])
+        rule16   = ctrl.Rule(br_input['good'] & br_forced['average'], br_output['good'])
+        rule17   = ctrl.Rule(br_input['excellent'] & br_forced['average'], br_output['excellent'])
+
+        rule21   = ctrl.Rule(br_input['dismal'] & br_forced['good'], br_output['poor'])
+        rule22   = ctrl.Rule(br_input['poor'] & br_forced['good'], br_output['mediocre'])
+        rule23   = ctrl.Rule(br_input['mediocre'] & br_forced['good'], br_output['average'])
+        rule24   = ctrl.Rule(br_input['average'] & br_forced['good'], br_output['decent'])
+        rule25   = ctrl.Rule(br_input['decent'] & br_forced['good'], br_output['good'])
+        rule26   = ctrl.Rule(br_input['good'] & br_forced['good'], br_output['excellent'])
+        rule27   = ctrl.Rule(br_input['excellent'] & br_forced['good'], br_output['excellent'])
+
+        
+        br_ctrl = ctrl.ControlSystem([rule1, rule2, rule3, rule4, rule5, rule6, rule7,
+                                      rule11, rule12, rule13, rule14, rule15, rule16, rule17,
+                                      rule21, rule22, rule23, rule24, rule25, rule26, rule27])
+        control_init.br_var = ctrl.ControlSystemSimulation(br_ctrl)
+        control_init.first_run = False
+
+    return control_init.br_var
+
+def cmeans():
+    '''
+    1) chaque fois que "brightness" est modifier par le user, une nouvelle donnée est rajouter
+    2) avec les data qui devrait former un cluster, trouver les centres (n=3)
+    3) utiliser ses centres comme membership functions pour le fuzzy controller
+    '''
+    pass
 def get_estimated_lux():
     global camera
     _, image = camera.read()
@@ -69,12 +123,16 @@ def fuzz_update():
         is_input_refreshed = True
     # else if user is not changing the value, use fuzzy controller
     elif is_input_refreshed:
-        # todo: run normal fuzzy controller here
+        '''
+        todo: run normal fuzzy controller here
+        '''
         sensor_value = 0
         if use_real_sensor.get() == 1:
             sensor_value = get_percent_lux()
         else:
             sensor_value = sim_slider.get()
+
+        
         print(f"fuzzy ctrl call with sensor = {sensor_value}%")
 
     # tkinter refresh to call this function again
@@ -88,6 +146,9 @@ if __name__ == '__main__':
     camera = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     sensor_avg = 0
 
+    control_init.first_run = True
+
+    control_init()
     # create main window
     gui = tk.Tk()
     gui.resizable(False, False)
