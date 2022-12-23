@@ -4,19 +4,30 @@ import time
 import cv2
 import numpy as np
 from skfuzzy import control as ctrl
+import skfuzzy
+
+import random
 
 def control_init():
     if control_init.first_run:
         max = 120
         br_input  = ctrl.Antecedent(np.arange(0,max,1), 'input')
-        br_forced = ctrl.Antecedent(np.arange(0,10,1), 'forced')
+        br_forced = ctrl.Antecedent(np.arange(-10,10,1), 'forced')
         br_output = ctrl.Consequent(np.arange(0,max,1), 'output')
 
         br_input.automf(7)  # [dismal, poor, mediocre, average, decent, good, excellent]
-        br_forced.automf(3) # [poor, average, good] or switch to c-means?
+        if len(center_list) < 3 :
+            br_forced['poor'] = skfuzzy.trimf(br_forced.universe, [-10, -10, 0])
+            br_forced['average'] = skfuzzy.trimf(br_forced.universe, [-5, 0, 5])
+            br_forced['good'] = skfuzzy.trimf(br_forced.universe, [0, 10, 10])
+        else:
+            br_forced['poor'] = skfuzzy.trimf(br_forced.universe, [-10, sorted(center_list)[0], sorted(center_list)[0]+5])
+            br_forced['average'] = skfuzzy.trimf(br_forced.universe, [sorted(center_list)[1]-5, sorted(center_list)[1], sorted(center_list)[1]+5])
+            br_forced['good'] = skfuzzy.trimf(br_forced.universe, [sorted(center_list)[2]-5, sorted(center_list)[2], 10])
+        #br_forced.automf(3) # [poor, average, good] or switch to c-means?
         br_output.automf(7) # [dismal, poor, mediocre, average, decent, good, excellent]
 
-        br_forced.view()
+        #br_forced.view()
 
         # todo: rules
         rule1   = ctrl.Rule(br_input['dismal'] & br_forced['poor'], br_output['dismal'])
@@ -53,12 +64,17 @@ def control_init():
     return control_init.br_var
 
 def cmeans():
-    '''
-    1) chaque fois que "brightness" est modifier par le user, une nouvelle donnée est rajouter
-    2) avec les data qui devrait former un cluster, trouver les centres (n=3)
-    3) utiliser ses centres comme membership functions pour le fuzzy controller
-    '''
-    pass
+    global center_list
+    a1D = np.array(cmeans_list)
+    
+    a2D=np.vstack((a1D,np.zeros(len(cmeans_list))))
+    #print(a2D)
+    cntr, u_orig, _, _, _, _, _ = skfuzzy.cluster.cmeans(a2D, 3, 2, error=0.005, maxiter=1000)
+    for pt in cntr:
+        center_list.append(pt[0])
+    return center_list
+
+
 def get_estimated_lux():
     global camera
     _, image = camera.read()
@@ -90,6 +106,7 @@ def set_brightness(value):
     global last_bright
     global last_input_time
     global is_input_refreshed
+    global last_slider_value
     out_slider.set(value)
     sbc.set_brightness(value)
     last_bright = value
@@ -105,21 +122,28 @@ def fuzz_update():
     global last_input_time
     global is_input_refreshed
     global use_real_sensor
+    global cmeans_list
 
     # input from windows' screen brightness control
     cur_bright = sbc.get_brightness(display=0)[0]
     if cur_bright != last_bright:
         set_brightness(cur_bright)
-
+        
     # input from app slider
     elif out_slider.get() != last_bright:
+        out_slider_time = time.time()
         cur_bright = out_slider.get()
         set_brightness(cur_bright)
+
 
     # when a new user input has been detected, update c-means
     if time.time() - last_input_time > 1.0 and not is_input_refreshed:
         # todo: use cur_bright to set a new truth entry in fuzzy controller
+        #print("values = {} and {}".format(cur_bright, last_bright))
+        cmeans_list.append((random.randrange(-10,10,1)))
         print("update c-means!==========================")
+        #print(cmeans_list)
+        centers = cmeans()
         is_input_refreshed = True
     # else if user is not changing the value, use fuzzy controller
     elif is_input_refreshed:
@@ -133,7 +157,7 @@ def fuzz_update():
             sensor_value = sim_slider.get()
 
         
-        print(f"fuzzy ctrl call with sensor = {sensor_value}%")
+        #print(f"fuzzy ctrl call with sensor = {sensor_value}%")
 
     # tkinter refresh to call this function again
     gui.after(1, fuzz_update)
@@ -142,6 +166,8 @@ def fuzz_update():
 if __name__ == '__main__':
     last_bright = sbc.get_brightness(display=0)
     last_input_time = time.time()
+    cmeans_list = []
+    center_list = []
     is_input_refreshed = True
     camera = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     sensor_avg = 0
