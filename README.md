@@ -18,7 +18,7 @@ lib pythons utilisées:
   - ``pip install --force-reinstall --no-cache -U opencv-python==4.5.5.62   ``
 
 
-Fonctionnement du code :
+### Fonctionnement du code :
 
 Le contrôleur de logique floue a deux entrées et une sortie.
 
@@ -36,3 +36,22 @@ Comment déterminer la préférence de l'utilisateur :
 Chaque fois que l'utilisateur modifie la valeur de luminosité de son écran avec le "slider", la différence entre la valeur initiale et la valeur finale du slider est mise dans un array. Ce array est ensuite envoyer vers une fonction c-means pour trouver les centres de ce cluster 1D pour déterminer la tendance des préférences.
 
 Ces centres déterminés permettent de modifier les fonctions d'appartenance pour l'entrée "forced".
+
+### Utilisation de l'application :
+
+![App image](./img/app.png)
+
+**Slider `brightness`**: 
+- Sortie du contrôleur fuzzy, correspond à l'éclairage de l'écran actuel
+- Sert également de override utilisateur pour recalculer les C-Means
+- L'utilisateur peut utiliser le contrôle d'éclairage d'écran de l'OS également pour ajuster cette valeur
+- Après 1 seconde d'inactivité de l'utilisateur sur le contrôle, la valeur finale de l'ajustement est utilisée pour calculer l'override C-Means
+
+**Slider `use webcam`**:
+- `0` : Utilise la valeur du slider `sensor` comme input
+- `1` : Utilise la webcam pour simuler un luxomètre à l'aide la librairie OpenCV
+
+**Slider `sensor`**:
+- Affiche la valeur d'entrée du contrôleur fuzzy
+- Quand slider `use webcam` à `0` : peut être contrôler pour changer directement l'entrée du système
+- Quand slider `use webcam` à `1` : affiche l'estimation en % du capteur luxomètre simulé

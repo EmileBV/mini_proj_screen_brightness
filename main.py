@@ -205,6 +205,7 @@ if __name__ == '__main__':
 
     # create main window
     gui = tk.Tk()
+    gui.title("AutoBright")
     gui.resizable(False, False)
     gui.attributes("-toolwindow", 1)
     frame = tk.Frame(gui)
