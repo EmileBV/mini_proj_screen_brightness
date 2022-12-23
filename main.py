@@ -71,6 +71,7 @@ def control_init():
 
 def cmeans():
     global center_list
+    global cmeans_list
     a1D = np.array(cmeans_list)
 
     a2D = np.vstack((a1D, np.zeros(len(cmeans_list))))
@@ -96,7 +97,7 @@ def get_estimated_lux():
 
 def get_percent_lux():
     global sensor_avg
-    lux_max = 200
+    lux_max = 140
     sample_count = 10
     lux = get_estimated_lux()
     if lux == -1:
@@ -162,7 +163,7 @@ def fuzz_update():
         else :
             override_val = 0
         '''
-        override_val = cur_bright - sensor_value
+        override_val = min(10, max(-10, cur_bright - sensor_value))
         # override_val = random.randrange(-10, 10, 1)
         cmeans_list.append(override_val)
         print("update c-means!==========================")
@@ -178,7 +179,7 @@ def fuzz_update():
         fuzz.input['forced'] = override_val
         print(sensor_value, override_val)
         fuzz.compute()
-        cur_bright = int(fuzz.output['output'])
+        cur_bright = min(100, max(0, int(fuzz.output['output'])))
         set_brightness(cur_bright)
         is_input_refreshed = True
         out_slider.set(cur_bright)
