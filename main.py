@@ -5,58 +5,61 @@ import cv2
 import numpy as np
 from skfuzzy import control as ctrl
 import skfuzzy
-
 import random
+
 
 def control_init():
     if control_init.first_run:
-        max = 120
-        br_input  = ctrl.Antecedent(np.arange(0,max,1), 'input')
-        br_forced = ctrl.Antecedent(np.arange(-10,10,1), 'forced')
-        br_output = ctrl.Consequent(np.arange(0,max,1), 'output')
+        in_out_max = 120
+        br_input = ctrl.Antecedent(np.arange(0, in_out_max, 1), 'input')
+        br_forced = ctrl.Antecedent(np.arange(-10, 10, 1), 'forced')
+        br_output = ctrl.Consequent(np.arange(0, in_out_max, 1), 'output')
 
         br_input.automf(7)  # [dismal, poor, mediocre, average, decent, good, excellent]
-        if len(center_list) < 3 :
+        if len(center_list) < 3:
             br_forced['poor'] = skfuzzy.trimf(br_forced.universe, [-10, -10, 0])
             br_forced['average'] = skfuzzy.trimf(br_forced.universe, [-5, 0, 5])
             br_forced['good'] = skfuzzy.trimf(br_forced.universe, [0, 10, 10])
         else:
-            br_forced['poor'] = skfuzzy.trimf(br_forced.universe, [-10, sorted(center_list)[0], sorted(center_list)[0]+5])
-            br_forced['average'] = skfuzzy.trimf(br_forced.universe, [sorted(center_list)[1]-5, sorted(center_list)[1], sorted(center_list)[1]+5])
-            br_forced['good'] = skfuzzy.trimf(br_forced.universe, [sorted(center_list)[2]-5, sorted(center_list)[2], 10])
-        #br_forced.automf(3) # [poor, average, good] or switch to c-means?
-        br_output.automf(7) # [dismal, poor, mediocre, average, decent, good, excellent]
+            br_forced['poor'] = skfuzzy.trimf(br_forced.universe,
+                                              [-10, sorted(center_list)[0], sorted(center_list)[0] + 5])
+            br_forced['average'] = skfuzzy.trimf(br_forced.universe,
+                                                 [sorted(center_list)[1] - 5, sorted(center_list)[1],
+                                                  sorted(center_list)[1] + 5])
+            br_forced['good'] = skfuzzy.trimf(br_forced.universe,
+                                              [sorted(center_list)[2] - 5, sorted(center_list)[2], 10])
+        # br_forced.automf(3) # [poor, average, good] or switch to c-means?
+        br_output.automf(7)  # [dismal, poor, mediocre, average, decent, good, excellent]
 
         br_forced.view()
         br_input.view()
         br_output.view()
 
         # todo: rules
-        rule1   = ctrl.Rule(br_input['dismal'] & br_forced['poor'], br_output['dismal'])
-        rule2   = ctrl.Rule(br_input['poor'] & br_forced['poor'], br_output['dismal'])
-        rule3   = ctrl.Rule(br_input['mediocre'] & br_forced['poor'], br_output['poor'])
-        rule4   = ctrl.Rule(br_input['average'] & br_forced['poor'], br_output['mediocre'])
-        rule5   = ctrl.Rule(br_input['decent'] & br_forced['poor'], br_output['average'])
-        rule6   = ctrl.Rule(br_input['good'] & br_forced['poor'], br_output['decent'])
-        rule7   = ctrl.Rule(br_input['excellent'] & br_forced['poor'], br_output['good'])
+        rule1 = ctrl.Rule(br_input['dismal'] & br_forced['poor'], br_output['dismal'])
+        rule2 = ctrl.Rule(br_input['poor'] & br_forced['poor'], br_output['dismal'])
+        rule3 = ctrl.Rule(br_input['mediocre'] & br_forced['poor'], br_output['poor'])
+        rule4 = ctrl.Rule(br_input['average'] & br_forced['poor'], br_output['mediocre'])
+        rule5 = ctrl.Rule(br_input['decent'] & br_forced['poor'], br_output['average'])
+        rule6 = ctrl.Rule(br_input['good'] & br_forced['poor'], br_output['decent'])
+        rule7 = ctrl.Rule(br_input['excellent'] & br_forced['poor'], br_output['good'])
 
-        rule11   = ctrl.Rule(br_input['dismal'] & br_forced['average'], br_output['dismal'])
-        rule12   = ctrl.Rule(br_input['poor'] & br_forced['average'], br_output['poor'])
-        rule13   = ctrl.Rule(br_input['mediocre'] & br_forced['average'], br_output['mediocre'])
-        rule14   = ctrl.Rule(br_input['average'] & br_forced['average'], br_output['average'])
-        rule15   = ctrl.Rule(br_input['decent'] & br_forced['average'], br_output['decent'])
-        rule16   = ctrl.Rule(br_input['good'] & br_forced['average'], br_output['good'])
-        rule17   = ctrl.Rule(br_input['excellent'] & br_forced['average'], br_output['excellent'])
+        rule11 = ctrl.Rule(br_input['dismal'] & br_forced['average'], br_output['dismal'])
+        rule12 = ctrl.Rule(br_input['poor'] & br_forced['average'], br_output['poor'])
+        rule13 = ctrl.Rule(br_input['mediocre'] & br_forced['average'], br_output['mediocre'])
+        rule14 = ctrl.Rule(br_input['average'] & br_forced['average'], br_output['average'])
+        rule15 = ctrl.Rule(br_input['decent'] & br_forced['average'], br_output['decent'])
+        rule16 = ctrl.Rule(br_input['good'] & br_forced['average'], br_output['good'])
+        rule17 = ctrl.Rule(br_input['excellent'] & br_forced['average'], br_output['excellent'])
 
-        rule21   = ctrl.Rule(br_input['dismal'] & br_forced['good'], br_output['poor'])
-        rule22   = ctrl.Rule(br_input['poor'] & br_forced['good'], br_output['mediocre'])
-        rule23   = ctrl.Rule(br_input['mediocre'] & br_forced['good'], br_output['average'])
-        rule24   = ctrl.Rule(br_input['average'] & br_forced['good'], br_output['decent'])
-        rule25   = ctrl.Rule(br_input['decent'] & br_forced['good'], br_output['good'])
-        rule26   = ctrl.Rule(br_input['good'] & br_forced['good'], br_output['excellent'])
-        rule27   = ctrl.Rule(br_input['excellent'] & br_forced['good'], br_output['excellent'])
+        rule21 = ctrl.Rule(br_input['dismal'] & br_forced['good'], br_output['poor'])
+        rule22 = ctrl.Rule(br_input['poor'] & br_forced['good'], br_output['mediocre'])
+        rule23 = ctrl.Rule(br_input['mediocre'] & br_forced['good'], br_output['average'])
+        rule24 = ctrl.Rule(br_input['average'] & br_forced['good'], br_output['decent'])
+        rule25 = ctrl.Rule(br_input['decent'] & br_forced['good'], br_output['good'])
+        rule26 = ctrl.Rule(br_input['good'] & br_forced['good'], br_output['excellent'])
+        rule27 = ctrl.Rule(br_input['excellent'] & br_forced['good'], br_output['excellent'])
 
-        
         br_ctrl = ctrl.ControlSystem([rule1, rule2, rule3, rule4, rule5, rule6, rule7,
                                       rule11, rule12, rule13, rule14, rule15, rule16, rule17,
                                       rule21, rule22, rule23, rule24, rule25, rule26, rule27])
@@ -65,12 +68,13 @@ def control_init():
 
     return control_init.br_var
 
+
 def cmeans():
     global center_list
     a1D = np.array(cmeans_list)
-    
-    a2D=np.vstack((a1D,np.zeros(len(cmeans_list))))
-    #print(a2D)
+
+    a2D = np.vstack((a1D, np.zeros(len(cmeans_list))))
+    # print(a2D)
     cntr, u_orig, _, _, _, _, _ = skfuzzy.cluster.cmeans(a2D, 3, 2, error=0.005, maxiter=1000)
     for pt in cntr:
         center_list.append(pt[0])
@@ -133,28 +137,36 @@ def fuzz_update():
     cur_bright = sbc.get_brightness(display=0)[0]
     if cur_bright != last_bright:
         set_brightness(cur_bright)
-        
+
     # input from app slider
     elif out_slider.get() != last_bright:
         out_slider_time = time.time()
         cur_bright = out_slider.get()
         set_brightness(cur_bright)
 
-    
+    # read input
+    sensor_value = 0
+    if use_real_sensor.get() == 1:
+        sensor_value = int(get_percent_lux())
+        sim_slider.set(sensor_value)
+    else:
+        sensor_value = sim_slider.get()
+
     # when a new user input has been detected, update c-means
-    if time.time() - last_input_time > 1.0 and not is_input_refreshed:
+    if time.time() - last_input_time > 1.0 and is_input_refreshed == False:
         # todo: use cur_bright to set a new truth entry in fuzzy controller
-        #print("values = {} and {}".format(cur_bright, last_bright))
+        # print("values = {} and {}".format(cur_bright, last_bright))
         '''
         if override_val :
             prendre la paire de data
         else :
             override_val = 0
         '''
-        override_val = random.randrange(-10,10,1)
+        override_val = cur_bright - sensor_value
+        # override_val = random.randrange(-10, 10, 1)
         cmeans_list.append(override_val)
         print("update c-means!==========================")
-        #print(cmeans_list)
+        # print(cmeans_list)
         centers = cmeans()
         is_input_refreshed = True
     # else if user is not changing the value, use fuzzy controller
@@ -162,19 +174,17 @@ def fuzz_update():
         '''
         todo: run normal fuzzy controller here
         '''
-        sensor_value = 0
-        if use_real_sensor.get() == 1:
-            sensor_value = get_percent_lux()
-        else:
-            sensor_value = sim_slider.get()
-
         fuzz.input['input'] = sensor_value
         fuzz.input['forced'] = override_val
         print(sensor_value, override_val)
         fuzz.compute()
-        print(fuzz.output['output'])
+        cur_bright = int(fuzz.output['output'])
+        set_brightness(cur_bright)
+        is_input_refreshed = True
+        out_slider.set(cur_bright)
+        print(cur_bright)
         print("-----")
-        #print(f"fuzzy ctrl call with sensor = {sensor_value}%")
+        # print(f"fuzzy ctrl call with sensor = {sensor_value}%")
 
     # tkinter refresh to call this function again
     gui.after(1, fuzz_update)
@@ -220,4 +230,3 @@ if __name__ == '__main__':
     gui.after(1, fuzz_update)
     gui.mainloop()
     camera.release()
-
