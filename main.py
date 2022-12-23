@@ -172,8 +172,8 @@ def fuzz_update():
         fuzz.input['forced'] = override_val
         print(sensor_value, override_val)
         fuzz.compute()
-        print(fuzz.output['output'])
-        print("-----")
+        fuzz.output['output']
+        #print("-----")
         #print(f"fuzzy ctrl call with sensor = {sensor_value}%")
 
     # tkinter refresh to call this function again
