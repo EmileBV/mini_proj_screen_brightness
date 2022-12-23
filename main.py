@@ -27,7 +27,9 @@ def control_init():
         #br_forced.automf(3) # [poor, average, good] or switch to c-means?
         br_output.automf(7) # [dismal, poor, mediocre, average, decent, good, excellent]
 
-        #br_forced.view()
+        br_forced.view()
+        br_input.view()
+        br_output.view()
 
         # todo: rules
         rule1   = ctrl.Rule(br_input['dismal'] & br_forced['poor'], br_output['dismal'])
@@ -123,7 +125,10 @@ def fuzz_update():
     global is_input_refreshed
     global use_real_sensor
     global cmeans_list
+    global fuzz
+    global override_val
 
+    fuzz = control_init()
     # input from windows' screen brightness control
     cur_bright = sbc.get_brightness(display=0)[0]
     if cur_bright != last_bright:
@@ -135,12 +140,19 @@ def fuzz_update():
         cur_bright = out_slider.get()
         set_brightness(cur_bright)
 
-
+    
     # when a new user input has been detected, update c-means
     if time.time() - last_input_time > 1.0 and not is_input_refreshed:
         # todo: use cur_bright to set a new truth entry in fuzzy controller
         #print("values = {} and {}".format(cur_bright, last_bright))
-        cmeans_list.append((random.randrange(-10,10,1)))
+        '''
+        if override_val :
+            prendre la paire de data
+        else :
+            override_val = 0
+        '''
+        override_val = random.randrange(-10,10,1)
+        cmeans_list.append(override_val)
         print("update c-means!==========================")
         #print(cmeans_list)
         centers = cmeans()
@@ -156,7 +168,12 @@ def fuzz_update():
         else:
             sensor_value = sim_slider.get()
 
-        
+        fuzz.input['input'] = sensor_value
+        fuzz.input['forced'] = override_val
+        print(sensor_value, override_val)
+        fuzz.compute()
+        print(fuzz.output['output'])
+        print("-----")
         #print(f"fuzzy ctrl call with sensor = {sensor_value}%")
 
     # tkinter refresh to call this function again
@@ -168,13 +185,13 @@ if __name__ == '__main__':
     last_input_time = time.time()
     cmeans_list = []
     center_list = []
+    override_val = 0
     is_input_refreshed = True
     camera = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     sensor_avg = 0
 
     control_init.first_run = True
 
-    control_init()
     # create main window
     gui = tk.Tk()
     gui.resizable(False, False)
