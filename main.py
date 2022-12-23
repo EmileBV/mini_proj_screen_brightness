@@ -20,7 +20,7 @@ def get_estimated_lux():
 
 def get_percent_lux():
     global sensor_avg
-    lux_max = 200
+    lux_max = 140
     sample_count = 10
     lux = get_estimated_lux()
     if lux == -1:
